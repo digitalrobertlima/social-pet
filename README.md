@@ -1,70 +1,61 @@
 <div align="center">
-	<h1>🐾 Social Pet – MVP Pré-Atendimento</h1>
-	<p>Formulário único (static HTML) para coleta completa de dados antes do atendimento via WhatsApp.</p>
-	<sub>Versão inicial – nenhum backend ainda. Foco: agilidade e padronização das informações.</sub>
+	<h1>🐾 Social Pet – PWA Pré-Atendimento (v0.0.1)</h1>
+	<p>Aplicação estática (GitHub Pages) + PWA offline para coleta de dados antes da negociação via WhatsApp.</p>
+	<sub>Versão 0.0.1 – Escopo enxuto: somente front. Backend removido para simplificar.</sub>
 </div>
 
 ## ✅ Objetivo
 Evitar retrabalho e troca de mensagens repetitivas: o tutor preenche tudo, gera uma mensagem consolidada e abre direto o WhatsApp da equipe para negociação de valores e confirmação.
 
-## 🧱 Stack (MVP)
-- HTML + Tailwind CDN
-- Vanilla JavaScript modularizado dentro do arquivo (auto-executável IIFE)
-- Armazenamento local: `localStorage` (export/import JSON)
-- Deploy alvo: GitHub Pages (estático)
+## 🧱 Stack (v0.0.1)
+- HTML + Bootstrap 5 (CDN)
+- Vanilla JavaScript modular (`assets/js/app.js`)
+- PWA (Service Worker + Manifest + Offline Cache)
+- `localStorage` (persistência local + export/import JSON)
+- Deploy: GitHub Pages (100% estático)
 
 ## 🗂️ Arquivos
 | Arquivo | Descrição |
 |---------|-----------|
-| `index.html` | Form principal + lógica de geração de mensagem WhatsApp + persistência local. |
-| `version.txt` | Arquivo fonte da versão exibida como badge no app. |
+| `index.html` | Estrutura principal + wizard multi-etapas + inclusão scripts. |
+| `assets/css/custom.css` | Estilos complementares e animações. |
+| `assets/js/app.js` | Lógica de estado, validação, geração de mensagem, PWA & tema. |
+| `manifest.webmanifest` | Manifesto PWA. |
+| `sw.js` | Service Worker (cache offline). |
+| `version.txt` | Versão exibida no badge. |
 | `LICENSE` | Licença do projeto. |
 
-## ✨ Funcionalidades Principais
-- Cadastro de Tutor (nome, telefone WhatsApp, email, observações)
-- Múltiplos Pets (porte, raça, idade, vacinas, comportamento, saúde, restrições)
-- Tipos de atendimento: Hotel, Creche (Daycare), Banho/Tosa Avulso
-- Controle de estadia (datas e horários) com regras:
-	- Funcionamento geral: 09:00–20:00
-	- Check-in / Check-out: somente dias úteis até 18:00
-- Banho durante estadia (checkout / semanal / 2x semana / nenhum)
-- Serviço Avulso: Banho, Tosa, Banho+Tosa, Outro
-- Tosa opcional (diversos tipos)
-- Medicação / Alimentação Especial (com campo detalhado condicional)
-- Cuidados Extras / Observações
-- Geração de mensagem estruturada (texto pronto para colar / enviar)
-- Link direto para WhatsApp (substituir número interno no código quando definido)
-- Salvamento automático no `localStorage`
-- Exportar / Importar JSON (portabilidade)
-- Alternância de Tema (claro/escuro)
-- Consentimento LGPD + Termos (aceite obrigatório)
-- Validações de negócio e feedback de status
+## ✨ Funcionalidades v0.0.1
+- Wizard 4 etapas: Tutor → Pets → Serviços/Estadia → Termos & Mensagem
+- Mensagem WhatsApp consolidada (sem valores)
+- Regras de negócios (horários, dias úteis, check-in/out ≤ 18h, campos obrigatórios)
+- Múltiplos pets com vacinas, saúde, comportamento
+- PWA: instalação + offline (cache básico)
+- Exportar / Importar dados (`JSON`)
+- Tema claro/escuro persistente
+- Badge de versão dinâmico
+- LGPD (consentimento simples, dados só localmente)
 
-## 🛡️ LGPD (MVP)
-Nenhum dado é enviado a servidor neste estágio. As informações ficam no navegador do usuário. Próximos passos futuros incluirão:
-- Aviso de privacidade dedicado
-- Política de retenção e exclusão
-- Opção "Esquecer meus dados"
+## 🛡️ LGPD (v0.0.1)
+Nenhum dado sai do dispositivo. Próximas versões: aviso de privacidade dedicado, política de retenção e botão "Excluir meus dados" mais explícito.
 
 ## 🚀 Deploy no GitHub Pages
 1. Commit `index.html` na branch `main`
 2. Ativar Pages: Settings → Pages → Deploy from branch → `main` / root
 3. Acessar URL pública gerada
 
-## 🧪 Próximos Incrementos (Planejado)
-| Etapa | Descrição |
-|-------|-----------|
-| Persistência Backend | API mínima (NestJS + PostgreSQL) para armazenar submissões e gerar dashboard interno |
-| Autenticação Staff | Login interno para equipe revisar e marcar status de agendamentos |
-| Geração de Proposta | Cálculo automático de estimativa (sem exibir preço final público) |
-| Integração WhatsApp API | Envio automático sem abrir cliente consumidor (depois) |
-| Painel Ocupação | Visualização de capacidade (hotel / creche) |
-| Auditoria & Logs | Trilhas de ações internas |
-| Internacionalização | Preparar i18n (fase expansão) |
+## 🧪 Próximos Incrementos (Rascunho)
+| Fase | Foco |
+|------|------|
+| 0.0.x | Ajustes UI/UX, acessibilidade, limpeza de código |
+| 0.1.0 | Backend API submissões + persistência |
+| 0.2.0 | Painel interno staff + autenticação básica |
+| 0.3.0 | Estimativa automática (sem preços externos) |
+| 0.4.0 | Integração oficial WhatsApp API / disparo direto |
+| 0.5.0 | Ocupação & capacidade visual |
 
-## 🧩 Evolução Arquitetural Planejada
-Fase 2: Monólito backend (NestJS + TypeScript) com módulos: Auth, Tutors, Pets, Bookings, Pricing Rules, Messaging.
-Fase 3: Extração de microserviços (Payment / Notifications) se volume exigir.
+## 🧩 Evolução Arquitetural (Futuro)
+Backend só será reintroduzido quando precisarmos histórico centralizado / painel. Até lá manter simplicidade.
 
 ## 🔧 Como Testar Localmente
 Basta abrir `index.html` em um navegador moderno (Chrome / Firefox / Edge / Safari). Nenhuma dependência extra.
@@ -73,21 +64,19 @@ Basta abrir `index.html` em um navegador moderno (Chrome / Firefox / Edge / Safa
 - Alterar número WhatsApp padrão em `generateWhatsAppLink()` → variável `companyNumber` dentro do script.
 - Alterar janela de funcionamento → editar validação dentro de `validateBusinessRules()`.
 
-## 📌 Convenções Futuras (quando backend iniciar)
-- TypeScript estrito, ESLint + Prettier
-- Testes ≥80% coverage (Jest / Supertest)
-- Commits semânticos (feat:, fix:, chore:, docs:, refactor:, test:)
-- GitHub Actions: build + lint + test + docker build
+## 📌 Convenções Futuras (quando backend entrar)
+- TypeScript estrito, testes ≥80% coverage
+- Commits semânticos já em uso
+- Pipeline CI: lint + test + build (planejado)
 
 ## 📄 Roadmap (Épicos Sintéticos)
 ```mermaid
 graph TD
-	A[MVP Formulário Estático] --> B[Backend API Submissões]
-	B --> C[Painel Interno Staff]
-	C --> D[Estimativa Automática]
-	D --> E[Integração WhatsApp API]
-	E --> F[Relatórios & Ocupação]
-	F --> G[Escalonar Infra / Microserviços]
+	A[v0.0.1 PWA Estático] --> B[v0.1.x API Submissões]
+	B --> C[v0.2.x Painel Staff]
+	C --> D[v0.3.x Estimativa]
+	D --> E[v0.4.x WhatsApp API]
+	E --> F[v0.5.x Ocupação]
 ```
 
 ## 🤝 Contribuição
@@ -102,13 +91,13 @@ Abra uma issue descrevendo sua necessidade ou sugestão.
 <sub>MVP gerado. Iterações bem-vindas.</sub>
 
 ---
-### 🔢 Versionamento da Interface
-O badge de versão (ex: `v0.0.1`) é carregado do arquivo `version.txt` via fetch. Para atualizar:
-1. Edite `version.txt` (ex: `0.0.2`).
-2. Faça commit semântico: `chore: bump version to 0.0.2`.
-3. Após o deploy/Pages recarregar, verifique o canto superior (navbar) para confirmar.
+### 🔢 Versionamento
+Badge lê `version.txt` (ex: `0.0.1`). Para atualizar:
+1. Editar `version.txt` (ex: `0.0.2`).
+2. Commit: `chore: bump version to 0.0.2`.
+3. Aguardar Pages invalidar cache (forçar reload se necessário).
 
-Sugestão de semântica de versão:
-- MAJOR: mudanças incompatíveis na coleta de dados.
-- MINOR: novos campos / features não disruptivos.
-- PATCH: correções de layout, ajustes de validação, refactors internos.
+Semântica:
+- MAJOR: quebra contrato campos.
+- MINOR: novos campos / flows.
+- PATCH: ajustes UI/validação/refactor.
