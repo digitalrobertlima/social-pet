@@ -1,306 +1,795 @@
 <!doctype html>
-<html lang="pt-BR" data-bs-theme="light">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Social Pet · Pré-Atendimento</title>
-    <meta name="description" content="PWA de pré-atendimento para hotel, creche, banho e tosa – Social Pet." />
-    <meta name="application-name" content="Social Pet" />
-    <meta name="theme-color" content="#0d6efd" />
-    <meta name="color-scheme" content="light dark" />
-    <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><text y='1em' font-size='96'>🐾</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAACqK7WtAAAAn0lEQVR42u3XsQ2AIBAF0T+ipWCJgR0GcoDZJYHHEguqJuxkG9t4J3n1x6L0UAgAAAAAAAAAAgPnoxk51Y7ktZJ6tPPktWJ8gFoh8wCjHvW6Kz1mYnpCtgbPobx8dLTOceevKkOinZ5G2nGe2i6iXcQF0mZ4gP1I3yAXSYniA/UjfIBdJieID9SP5wrd/v5b62nzP47gAAAAAAAAAA4BYkA4sw6TLOAAAAAElFTkSuQmCC" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="assets/css/custom.css" />
-  </head>
-  <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg bg-body border-bottom sticky-top">
-      <div class="container-fluid">
-  <a class="navbar-brand fw-semibold d-flex align-items-center gap-1" href="#"><span class="me-1">🐾</span><span>Social Pet</span><span id="appVersion" class="badge text-bg-secondary small" aria-label="Versão da aplicação">v0.0.1</span></a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"><span class="navbar-toggler-icon"></span></button>
-        <div id="navMain" class="collapse navbar-collapse">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0 small">
-            <li class="nav-item"><a class="nav-link active" href="#wizard">Formulário</a></li>
-            <li class="nav-item"><a class="nav-link" href="#resumo">Resumo</a></li>
+<html lang="pt-BR" dir="ltr">
+<head>
+  <!--
+    Social Pet v0.0.2 (Single-File Base → Evolui para v0.1 PWA)
+    Arquitetura: HTML + CSS + Vanilla JS (sem dependências externas / sem CDN)
+    Objetivo: Formulário multi-etapas (P0..P6) para pré-reserva de hotel/creche/banho&tosa canino.
+    Regras: Autosave localStorage, resumo final, link WhatsApp, impressão PDF.
+    Extensões Futuras (stubs comentados): Pagamentos, API WhatsApp Business (WABA), Backend ingest.
+    Tamanho alvo < 250KB (verifique antes de deploy). Evitar libs externas.
+  -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Social Pet • Pré-Atendimento Canino</title>
+  <meta name="description" content="Formulário guiado para reservas de hotel, creche, banho e tosa de cães. Envio rápido via WhatsApp." />
+  <meta name="theme-color" content="#0a3d62" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Social Pet – Pré-Atendimento" />
+  <meta property="og:description" content="Centralize dados do tutor e pets e envie para WhatsApp." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:image" content="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'&gt;&lt;text y='1em' font-size='96'&gt;🐾&lt;/text&gt;&lt;/svg&gt;" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><text y='1em' font-size='96'>🐾</text></svg>">
+  <!-- JSON-LD LocalBusiness (dados fictícios) -->
+  <script type="application/ld+json">{ "@context":"https://schema.org", "@type":"PetStore", "name":"Social Pet", "image":"https://example.com/logo.png", "address": {"@type":"PostalAddress","streetAddress":"Av. Exemplo, 123","addressLocality":"Cidade","addressRegion":"MG","postalCode":"00000-000","addressCountry":"BR"}, "openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"20:00"}], "telephone":"+55-11-99999-9999" }</script>
+  <style>
+    :root {
+      --brand:#0a3d62; --brand-rgb:10,61,98; --brand-accent:#16a085; --bg:#ffffff; --bg-alt:#f6f8fa; --border:#d9dde2; --text:#1f2d3a; --danger:#d63939; --warn:#b8860b; --ok:#138a36; --radius:10px; --focus:#ffbf47;
+      font-size:16px; font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+    }
+    @media (prefers-color-scheme: dark) { :root { --bg:#0f1418; --bg-alt:#1c242c; --border:#303c46; --text:#dbe2eb; } }
+    body { margin:0; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
+    h1,h2,h3 { line-height:1.2; }
+    a { color:var(--brand-accent); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    button { cursor:pointer; font-family:inherit; }
+    .container { width:100%; max-width:1180px; margin:0 auto; padding:0 1rem; }
+    header { background:linear-gradient(110deg,var(--brand) 0%,#052033 75%); color:#fff; padding:1.25rem 0 3.5rem; position:relative; overflow:hidden; }
+    header:after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.15),transparent 60%); }
+    .hero { display:grid; gap:1.25rem; max-width:800px; }
+    .hero h1 { font-size:clamp(1.8rem,4vw,2.8rem); margin:0; }
+    .trust-bar { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1rem; font-size:.65rem; letter-spacing:.05em; opacity:.9; text-transform:uppercase; }
+    .badge { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); padding:.35rem .6rem; border-radius:2rem; display:inline-flex; align-items:center; gap:.35rem; backdrop-filter:blur(4px); }
+    .main-card { background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 4px 12px -2px rgba(0,0,0,.08); margin-top:-2.2rem; position:relative; z-index:2; }
+    .tabs-head { display:flex; flex-wrap:wrap; gap:.5rem; padding:1rem; border-bottom:1px solid var(--border); }
+    .tab-btn { position:relative; background:var(--bg); border:1px solid var(--border); padding:.55rem .9rem; font-size:.8rem; border-radius:var(--radius); flex:1 1 auto; text-align:center; display:flex; flex-direction:column; gap:.25rem; min-width:110px; transition:.25s; }
+    .tab-btn[aria-current="step"] { background:linear-gradient(135deg, rgba(var(--brand-rgb),.1),rgba(var(--brand-rgb),.25)); border-color:var(--brand); box-shadow:0 0 0 2px rgba(var(--brand-rgb),.25); }
+    .tab-state { font-size:.55rem; text-transform:uppercase; letter-spacing:.05em; opacity:.7; }
+    .tab-index { font-weight:600; font-size:.75rem; }
+    .progress-wrap { padding:0 1rem 1rem; }
+    .progress-bar { height:6px; background:linear-gradient(90deg,var(--brand-accent),var(--brand)); border-radius:4px; width:0; transition:.4s cubic-bezier(.65,.05,.36,1); }
+    form { padding:1.25rem 1.25rem 2rem; }
+    fieldset { border:none; margin:0 0 1.25rem; padding:0; display:grid; gap:.75rem; }
+    legend { font-weight:600; margin-bottom:.35rem; font-size:1.05rem; display:flex; align-items:center; gap:.5rem; }
+    .grid { display:grid; gap:1rem; }
+    .g2 { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+    label span.req { color:var(--danger); font-weight:600; margin-left:.15rem; }
+    input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],input[type=number],select,textarea {
+      width:100%; box-sizing:border-box; padding:.55rem .65rem; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:inherit; font:inherit; line-height:1.3; resize:vertical; min-height:40px;
+    }
+    textarea { min-height:80px; }
+    input:focus,select:focus,textarea:focus { outline:2px solid var(--focus); outline-offset:1px; border-color:var(--brand); }
+    .inline { display:flex; align-items:center; gap:.4rem; }
+    .row { display:flex; flex-wrap:wrap; gap:.75rem; }
+    .pill { background:var(--bg); border:1px dashed var(--border); padding:.65rem .9rem; border-radius:var(--radius); position:relative; }
+    .pill h4 { margin:0 0 .25rem; font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; opacity:.6; }
+    .actions { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1rem; }
+    .btn { --btn-bg:var(--brand); --btn-color:#fff; --btn-border:var(--brand); background:var(--btn-bg); color:var(--btn-color); border:1px solid var(--btn-border); border-radius:8px; padding:.65rem 1.1rem; font-size:.8rem; letter-spacing:.03em; font-weight:600; display:inline-flex; align-items:center; gap:.4rem; box-shadow:0 2px 4px -1px rgba(0,0,0,.2); transition:.25s; }
+    .btn:hover { filter:brightness(1.05); transform:translateY(-1px); }
+    .btn:active { transform:translateY(0); filter:brightness(.95); }
+    .btn.outline { --btn-bg:linear-gradient(var(--bg),var(--bg)); --btn-color:var(--brand); --btn-border:var(--border); box-shadow:none; }
+    .btn.danger { --btn-bg:var(--danger); --btn-border:var(--danger); }
+    .btn.ghost { --btn-bg:rgba(var(--brand-rgb),.08); --btn-color:var(--brand); --btn-border:rgba(var(--brand-rgb),.15); box-shadow:none; }
+    .hidden { display:none !important; }
+    .fade-in { animation:fade .35s ease; }
+    @keyframes fade { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:translateY(0);} }
+    .divider { height:1px; background:linear-gradient(90deg,transparent,var(--border),transparent); margin:1.25rem 0; }
+    .note { font-size:.65rem; opacity:.75; line-height:1.3; }
+    .warn { color:var(--warn); }
+    .danger { color:var(--danger); }
+    .ok { color:var(--ok); }
+    .badge-small { background:var(--bg-alt); border:1px solid var(--border); padding:.2rem .5rem; border-radius:1rem; font-size:.6rem; letter-spacing:.05em; text-transform:uppercase; display:inline-flex; align-items:center; gap:.3rem; }
+    .summary { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; display:grid; gap:1rem; }
+    .summary-card { border:1px solid var(--border); padding:.75rem .9rem; border-radius:8px; background:var(--bg-alt); display:grid; gap:.5rem; position:relative; }
+    .summary-card h3 { font-size:.85rem; text-transform:uppercase; margin:0; letter-spacing:.06em; }
+    .edit-btn { position:absolute; top:.5rem; right:.5rem; font-size:.6rem; background:var(--bg); border:1px solid var(--border); padding:.25rem .45rem; border-radius:4px; cursor:pointer; }
+    .toast-stack { position:fixed; bottom:1rem; right:1rem; display:grid; gap:.5rem; z-index:999; max-width:280px; }
+    .toast { background:var(--bg-alt); border:1px solid var(--border); padding:.6rem .7rem; border-radius:6px; font-size:.7rem; line-height:1.3; box-shadow:0 2px 6px -2px rgba(0,0,0,.3); animation:slideIn .35s; display:flex; gap:.5rem; }
+    @keyframes slideIn { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+    .status-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.25rem .55rem; border-radius:1rem; font-size:.55rem; letter-spacing:.05em; font-weight:600; }
+    .status-ok { background:#e6f7ed; color:#0c6d31; border:1px solid #b9e6c9; }
+    .status-warn { background:#fff6db; color:#946200; border:1px solid #efd28f; }
+    .status-bad { background:#ffe2e2; color:#8d1111; border:1px solid #ecb1b1; }
+    .flex { display:flex; }
+    .flex-wrap { flex-wrap:wrap; }
+    .gap { gap:.5rem; }
+    .space-between { justify-content:space-between; }
+    .center { justify-content:center; align-items:center; }
+    .mt { margin-top:1rem; }
+    .small { font-size:.7rem; }
+    .mono { font-family:SFMono-Regular,Consolas,Menlo,monospace; font-size:.65rem; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+    .print-only { display:none; }
+    @media print {
+      body { background:#fff; color:#000; }
+      header, .tabs-head, .actions, .toast-stack, .progress-wrap, #heroCTA { display:none !important; }
+      .main-card { margin-top:0; border:none; box-shadow:none; }
+      .print-only { display:block; }
+      .summary-card { page-break-inside:avoid; }
+    }
+    /* Light/dark manual toggle */
+    .theme-toggle { position:fixed; top:.75rem; left:.75rem; z-index:1000; background:rgba(0,0,0,.35); color:#fff; border:none; padding:.5rem .7rem; border-radius:2rem; font-size:.65rem; letter-spacing:.05em; backdrop-filter:blur(6px); }
+    .theme-toggle:hover { background:rgba(0,0,0,.55); }
+  </style>
+</head>
+<body>
+<button id="btnTheme" class="theme-toggle" aria-label="Alternar tema">🌗</button>
+<header>
+  <div class="container hero">
+    <h1>Experiência completa para o bem-estar do seu cão.</h1>
+    <p class="small" style="max-width:640px; line-height:1.5">Centralizamos as informações essenciais para agilizar sua reserva de <strong>hotel</strong>, <strong>creche</strong> ou <strong>banho & tosa</strong>. Revise, gere o resumo e envie para nossa equipe via WhatsApp em segundos.</p>
+    <div class="trust-bar" aria-label="Indicadores de confiabilidade">
+      <span class="badge">✓ Ambiente Monitorado</span>
+      <span class="badge">✓ Enriquecimento Diário</span>
+      <span class="badge">✓ Protocolos de Saúde</span>
+      <span class="badge">✓ Equipe Especializada</span>
+      <span class="badge">✓ Relatórios Transparência</span>
+    </div>
+    <div id="heroCTA" class="actions" style="margin-top:.2rem;">
+      <a href="#form" class="btn">Reservar agora</a>
+      <button type="button" class="btn ghost" id="btnScrollResumo">Ver Resumo</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="main-card" id="formWrapper">
+    <div class="tabs-head" role="tablist" aria-label="Etapas do formulário" id="stepTabs"></div>
+    <div class="progress-wrap" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+    <form id="form" novalidate aria-live="polite">
+      <!-- STEPS (P0..P6) -->
+      <div id="stepsContainer"></div>
+      <div class="divider"></div>
+      <div class="actions">
+        <button type="button" class="btn outline" id="btnPrev" disabled>← Voltar</button>
+        <button type="button" class="btn" id="btnNext">Próximo →</button>
+        <button type="button" class="btn" id="btnGenerate" style="display:none;">Gerar Resumo ✅</button>
+        <button type="button" class="btn" id="btnSendWA" style="display:none;">Enviar WhatsApp 💬</button>
+        <button type="button" class="btn outline" id="btnPrint" style="display:none;">Imprimir / PDF 🖨️</button>
+        <button type="button" class="btn outline" id="btnExport" style="display:none;">Exportar JSON</button>
+        <button type="button" class="btn outline" id="btnExportCSV" style="display:none;">Exportar CSV</button>
+        <button type="button" class="btn danger outline" id="btnReset" style="margin-left:auto;">Limpar</button>
+      </div>
+      <p class="note" id="stepNote"></p>
+    </form>
+  </div>
+
+  <section id="summarySection" class="summary hidden" aria-label="Resumo Final" tabindex="-1">
+    <div class="flex space-between flex-wrap center" style="gap:.6rem;">
+      <h2 style="margin:0; font-size:1.1rem;">Resumo da Solicitação <span class="badge-small" id="reservationId"></span> <span id="versionBadge" class="badge-small">v0.0.2</span></h2>
+      <div class="flex gap">
+        <button class="btn outline" id="btnEditAny" type="button">Editar seções</button>
+      </div>
+    </div>
+    <div id="summaryCards" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));"></div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <div class="summary-card">
+        <h3>Preço Estimado</h3>
+        <p class="small" id="priceBreakdown">—</p>
+        <strong id="finalPrice" style="font-size:1.2rem;">R$ 0,00</strong>
+        <span class="note">Estimativa baseada em regras locais (não vinculante). Valores finais confirmados pela equipe.</span>
+      </div>
+      <div class="summary-card">
+        <h3>Próximas Ações</h3>
+        <ul class="small" style="margin:0; padding-left:1.05rem; line-height:1.4" id="nextActions"></ul>
+      </div>
+      <div class="summary-card" style="grid-column:1 / -1;">
+        <h3>Mensagem Compacta WhatsApp</h3>
+        <textarea id="waMessage" readonly class="mono" style="width:100%; min-height:120px;" aria-label="Mensagem gerada para WhatsApp"></textarea>
+        <div class="actions">
+          <button type="button" class="btn outline" id="btnCopyWA">Copiar</button>
+          <a id="waLink" class="btn" target="_blank" rel="noopener">Abrir WhatsApp</a>
+        </div>
+        <p class="note">Limite de caracteres do WhatsApp ~4096. Resumo é compactado (IDs, contagens, flags). Versão detalhada disponível via impressão.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="print-only" aria-hidden="true" id="printMeta">
+    <h2>Ficha de Pré-Reserva • Social Pet</h2>
+    <p class="small">Documento gerado em <span id="printDate"></span>. ID: <span id="printReservationId"></span></p>
+  </section>
+</main>
+
+<div class="toast-stack" aria-live="assertive" aria-atomic="true" id="toastStack"></div>
+
+<script>
+/* =============================================================
+   Social Pet v0.0.2 – Script Principal (Single file)            
+   Organização: IIFE modularizada para evitar poluição global.  
+   Futuras integrações: API Backend, WABA, Pagamentos.          
+   ============================================================= */
+(function(){
+  'use strict';
+
+  /* ------------------ CONFIG / CONSTANTES ------------------ */
+  const APP_VERSION = 'v0.0.2';
+  const WHATSAPP_TARGET = '5511999999999'; // Ajustar futuramente se necessário
+  const STORAGE_PREFIX = 'sp_v001_'; // Conforme prompt (mantido para upgrade path)
+  const MAX_PETS = 10;
+  const CAPACITY_DAILY = 30; // Limite arbitrário; futuro: derivar por tipo/porte
+  const CAPACITY_TURN = 21; // Para creche turno (exemplo); não aplicado detalhado ainda
+  const REQUIRED_VACCINES = ['V8/V10','Antirrábica'];
+  const PRICE_BASES = { hotel: 120, creche: 90, banho: 50, tosa: 70, 'banho_tosa': 110 };
+  const PRICE_PORTE_MULTIPLIER = { Mini: .8, Pequeno: 1, Médio: 1.2, Grande: 1.4, Gigante: 1.7 };
+  const PRICE_WEEKEND_SURCHARGE = 0.12; // adicional
+  const PRICE_PACKAGE_DISCOUNT = { 5: .05, 10: .12 }; // pacotes banho/tosa durante estadia
+  const PRICE_ANNUAL_DISCOUNT = .07; // desconto fidelidade (stub)
+  const LOCAL_DATE = ()=> new Date().toISOString().slice(0,10);
+  const randomId = (len=6)=>Array.from(crypto.getRandomValues(new Uint8Array(len))).map(b=>(b%36).toString(36)).join('').toUpperCase();
+  const el = id=>document.getElementById(id);
+
+  /* ------------------ STATE RUNTIME ------------------ */
+  const state = {
+    currentStep:0,
+    steps:[],
+    data:{
+      consent:{ accepted:false, policyLink:'#', marketing:false },
+      tutor:{ nome:'', telefone:'', email:'', emergenciaNome:'', emergenciaTel:'', endereco:'' },
+      pets:[],
+      services:{ tipoAtendimento:'', dataEntrada:'', horaEntrada:'', dataSaida:'', horaSaida:'', pacoteBanho:'nao', banhoFrequencia:'', tosaTipo:'nao', avulsoData:'', avulsoHora:'', avulsoTipo:'', listaEspera:false },
+      health:{ vacinasOk:false, comprovantes:[], medicacao:false, medicacaoDetalhes:'', alimentacaoEspecial:false, alimentacaoDetalhes:'', observacoesSaude:'' },
+      extras:{ cuidados:'', politicasAceite:false, cancelamento:'', remarcacao:'', anotacoesInternas:'' },
+      payment:{ forma:'PIX', estimativa:0, desconto:false, pacoteQtd:0 },
+      meta:{ createdAt: Date.now(), id:'' }
+    }
+  };
+  let activeStorageKey = STORAGE_PREFIX + 'anon';
+  let reservationCounter = Number(localStorage.getItem('sp_res_seq')||'0');
+  const stepMeta = [
+    { key:'consent', title:'Consentimento', note:'Aceite para prosseguir.', icon:'✔' },
+    { key:'tutor', title:'Tutor', note:'Dados de contato e emergência.', icon:'👤' },
+    { key:'pets', title:'Pets', note:'Cadastro de 1..n animais.', icon:'🐶' },
+    { key:'services', title:'Serviços', note:'Hotel / Creche / Banho Tosa.', icon:'🛎️' },
+    { key:'health', title:'Saúde', note:'Vacinas e cuidados.', icon:'❤️' },
+    { key:'extras', title:'Extras & Políticas', note:'Observações e aceite.', icon:'📝' },
+    { key:'payment', title:'Pagamento & Resumo', note:'Estimativa e envio.', icon:'💰' }
+  ];
+  state.steps = stepMeta.map(m=>m.key);
+
+  /* ------------------ TEMPLATES HTML ------------------ */
+  const stepsContainer = el('stepsContainer');
+  const stepTabs = el('stepTabs');
+  const progressBar = el('progressBar');
+  const summarySection = el('summarySection');
+  const summaryCards = el('summaryCards');
+  const reservationIdEl = el('reservationId');
+  const waMessageEl = el('waMessage');
+  const waLinkEl = el('waLink');
+  const priceBreakdownEl = el('priceBreakdown');
+  const finalPriceEl = el('finalPrice');
+  const nextActionsEl = el('nextActions');
+
+  function buildSteps(){
+    stepMeta.forEach((m,i)=>{
+      const tab = document.createElement('button');
+      tab.type='button'; tab.className='tab-btn'; tab.id='tab_'+m.key; tab.setAttribute('data-step-index',i); tab.innerHTML=`<span class="tab-index">${m.icon} ${i+1}. ${m.title}</span><span class="tab-state" id="state_${m.key}">Pendente</span>`; tab.addEventListener('click',()=>goToStep(i));
+      stepTabs.appendChild(tab);
+      const fs = document.createElement('fieldset'); fs.id='step_'+m.key; fs.dataset.stepIndex=i; fs.className='fade-in';
+      fs.innerHTML = renderStepContent(m.key);
+      stepsContainer.appendChild(fs);
+    });
+  }
+
+  function renderStepContent(key){
+    switch(key){
+      case 'consent': return `
+        <legend>Consentimento & Privacidade</legend>
+        <label class="inline"><input type="checkbox" id="consentAccepted" /> <span>Li e aceito os termos de uso e política de privacidade.<span class="req">*</span></span></label>
+        <label class="inline"><input type="checkbox" id="consentMarketing" /> <span>Aceito receber comunicações (opcional)</span></label>
+        <p class="note">Seus dados permanecem somente no seu dispositivo até o envio manual via WhatsApp. (LGPD)</p>`;
+      case 'tutor': return `
+        <legend>Dados do Tutor & Contato de Emergência</legend>
+        <div class="grid g2">
+          <label>Nome <span class="req">*</span><input id="tutorNome" required /></label>
+          <label>Telefone (WhatsApp) <span class="req">*</span><input id="tutorTelefone" required type="tel" pattern="[0-9()+\- ]{8,}" /></label>
+          <label>E-mail <input id="tutorEmail" type="email" /></label>
+          <label>Endereço <input id="tutorEndereco" /></label>
+          <label>Contato Emergência (Nome) <input id="emergNome" /></label>
+          <label>Contato Emergência (Telefone) <input id="emergTel" type="tel" pattern="[0-9()+\- ]{8,}" /></label>
+        </div>`;
+      case 'pets': return `
+        <legend>Pets do Tutor</legend>
+        <div class="actions"><button type="button" class="btn outline" id="btnAddPet">Adicionar Pet ➕</button></div>
+        <div id="petsList" class="grid" style="margin-top:.75rem; gap:.9rem;"></div>
+        <p class="note">Vacinas obrigatórias: V8/V10 e Antirrábica. Informe se atualizadas no passo Saúde.</p>`;
+      case 'services': return `
+        <legend>Serviços Solicitados</legend>
+        <div class="grid g2">
+          <label>Tipo Atendimento <span class="req">*</span>
+            <select id="tipoAtendimento" required>
+              <option value="" disabled selected>Selecione...</option>
+              <option value="hotel">Hotel</option>
+              <option value="creche">Creche</option>
+              <option value="banho">Banho Avulso</option>
+              <option value="tosa">Tosa Avulsa</option>
+              <option value="banho_tosa">Banho + Tosa</option>
+            </select>
+          </label>
+          <label>Pacote Banho Durante Estadia
+            <select id="pacoteBanho">
+              <option value="nao">Não</option>
+              <option value="5">Pacote 5</option>
+              <option value="10">Pacote 10</option>
+            </select>
+          </label>
+          <label>Data Entrada<input type="date" id="dataEntrada" /></label>
+          <label>Hora Entrada<input type="time" id="horaEntrada" /></label>
+          <label>Data Saída<input type="date" id="dataSaida" /></label>
+          <label>Hora Saída<input type="time" id="horaSaida" /></label>
+          <label>Frequência Banho (Hotel/Creche)
+            <select id="banhoFrequencia">
+              <option value="nao">Sem banho automático</option>
+              <option value="checkout">Somente no check-out</option>
+              <option value="1x">1x por semana</option>
+              <option value="2x">2x por semana</option>
+            </select>
+          </label>
+          <label>Tosa Tipo
+            <select id="tosaTipo">
+              <option value="nao">Sem tosa</option>
+              <option value="higienica">Higiênica</option>
+              <option value="padrao">Padrão</option>
+              <option value="tesoura">Tesoura</option>
+              <option value="especial">Especial (raça)</option>
+            </select>
+          </label>
+          <label>Avulso Data<input type="date" id="avulsoData" /></label>
+          <label>Avulso Hora<input type="time" id="avulsoHora" /></label>
+          <label>Avulso Tipo<select id="avulsoTipo"><option value="" disabled selected>—</option><option value="banho">Banho</option><option value="tosa">Tosa</option><option value="banho_tosa">Banho+Tosa</option></select></label>
+          <label class="inline" style="align-self:end"><input type="checkbox" id="listaEspera" /> <span>Entrar em lista de espera se lotado</span></label>
+        </div>
+        <p class="note">Regras: Check-in/out somente dias úteis até 18h. Horário funcionamento 09–20h. Capacidade diária limitada.</p>`;
+      case 'health': return `
+        <legend>Saúde & Vacinas</legend>
+        <label class="inline"><input type="checkbox" id="vacinasOk" /> <span>Confirmo vacinas obrigatórias atualizadas (V8/V10 + Antirrábica) <span class="req">*</span></span></label>
+        <div class="grid g2">
+          <label>Medicação Necessária?
+            <select id="medicacao">
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </label>
+          <label>Alimentação Especial?
+            <select id="alimentacaoEspecial">
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </label>
+        </div>
+        <label id="wrapMedicacaoDetalhes" class="hidden">Detalhes Medicação<textarea id="medicacaoDetalhes"></textarea></label>
+        <label id="wrapAlimentacaoDetalhes" class="hidden">Detalhes Alimentação<textarea id="alimentacaoDetalhes"></textarea></label>
+        <label>Observações de Saúde<textarea id="observacoesSaude" placeholder="Alergias, restrições, comportamento..." ></textarea></label>
+        <p class="note">Uploads de comprovantes podem ser adicionados futuramente (stub). <em>// TODO: compressão cliente & exif limpeza</em></p>`;
+      case 'extras': return `
+        <legend>Extras & Políticas</legend>
+        <label>Cuidados Especiais<textarea id="cuidados" placeholder="Rotina de passeio, brinquedos, socialização..." ></textarea></label>
+        <label>Política Cancelamento<textarea id="cancelamento" placeholder="Ex: Cancelamento sem custo até 7 dias antes." ></textarea></label>
+        <label>Política Remarcação<textarea id="remarcacao" placeholder="Ex: Remarcação possível até 48h." ></textarea></label>
+        <label>Anotações Internas<textarea id="anotacoesInternas" placeholder="Visível somente à equipe (futuro backend)." ></textarea></label>
+        <label class="inline"><input type="checkbox" id="politicasAceite" /> <span>Confirmo leitura e aceito as políticas. <span class="req">*</span></span></label>
+        <p class="note">Stubs Futuros: <code>// onWebhook('policyAccepted')</code> para backend de auditoria.</p>`;
+      case 'payment': return `
+        <legend>Pagamento & Finalização</legend>
+        <div class="grid g2">
+          <label>Forma de Pagamento
+            <select id="formaPagamento">
+              <option>PIX</option>
+              <option>Cartão</option>
+              <option>Dinheiro</option>
+            </select>
+          </label>
+          <label>Desconto Fidelidade (Anual)
+            <select id="descontoFidelidade">
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </label>
+          <label>Qtd Pacote (Banho/Tosa)
+            <select id="pacoteQtd">
+              <option value="0">Não</option>
+              <option value="5">Pacote 5 (5%)</option>
+              <option value="10">Pacote 10 (12%)</option>
+            </select>
+          </label>
+        </div>
+        <div class="pill" style="margin-top:1rem;">
+          <h4>Antes de Gerar o Resumo</h4>
+          <ul class="small" style="margin:0; padding-left:1rem; line-height:1.4">
+            <li>Confirme vacinas</li>
+            <li>Verifique datas e horários válidos</li>
+            <li>Revise pets e cuidados especiais</li>
           </ul>
-          <div class="d-flex gap-2 align-items-center flex-wrap">
-            <button id="btnInstall" class="btn btn-outline-primary btn-sm d-none" type="button">📲 Instalar App</button>
-            <button id="btnTheme" class="btn btn-outline-secondary btn-sm" type="button" aria-label="Alternar tema">🌗 Tema</button>
-            <button id="btnExport" class="btn btn-outline-secondary btn-sm" type="button">⬇️ Exportar</button>
-            <input id="importFile" type="file" accept="application/json" class="d-none" />
-            <button id="btnImport" class="btn btn-outline-secondary btn-sm" type="button">⬆️ Importar</button>
-            <button id="btnReset" class="btn btn-outline-danger btn-sm" type="button">🗑️ Limpar</button>
-          </div>
+        </div>`;
+      default: return '<p>Etapa não encontrada.</p>';
+    }
+  }
+
+  /* ------------------ PET ITEM TEMPLATE ------------------ */
+  function petTemplate(p,index){
+    return `<div class="pet-item" data-pet-index="${index}" style="border:1px solid var(--border); padding:.75rem .85rem; border-radius:8px; background:var(--bg); display:grid; gap:.65rem;">
+      <div class="flex space-between" style="gap:.5rem; align-items:center;">
+        <strong style="font-size:.8rem;">Pet #${index+1}</strong>
+        <div class="flex gap">
+          <button type="button" class="btn outline" data-act="dup" style="padding:.3rem .5rem; font-size:.55rem;">Duplicar</button>
+          <button type="button" class="btn danger outline" data-act="del" style="padding:.3rem .5rem; font-size:.55rem;">Remover</button>
         </div>
       </div>
-    </nav>
-
-    <main class="flex-fill container my-4" id="wizard">
-      <div class="mb-4">
-        <div class="progress" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100">
-          <div id="progressBar" class="progress-bar" style="width: 4%">1 / 4</div>
-        </div>
+      <div class="grid g2">
+        <label>Nome <span class="req">*</span><input data-field="nome" value="${escapeHTML(p.nome||'')}" required /></label>
+        <label>Porte <span class="req">*</span>
+          <select data-field="porte" required>
+            ${['','Mini','Pequeno','Médio','Grande','Gigante'].map(opt=>`<option ${opt===(p.porte||'')?'selected':''}>${opt}</option>`).join('')}
+          </select>
+        </label>
+        <label>Raça<input data-field="raca" value="${escapeHTML(p.raca||'')}" /></label>
+        <label>Idade (anos)<input data-field="idade" type="number" min="0" step="0.1" value="${escapeHTML(p.idade||'')}" /></label>
+        <label>Peso (kg)<input data-field="peso" type="number" min="0" step="0.1" value="${escapeHTML(p.peso||'')}" /></label>
+        <label>Comportamento<select data-field="comportamento">${['','Sociável','Calmo','Ansioso','Medroso','Reativo','Agressivo'].map(o=>`<option ${o===(p.comportamento||'')?'selected':''}>${o}</option>`).join('')}</select></label>
+        <label>Observações<textarea data-field="obs" placeholder="Preferências, reações...">${escapeHTML(p.obs||'')}</textarea></label>
       </div>
-      <form id="preForm" novalidate class="needs-validation" autocomplete="off">
-        <!-- STEP 1 Tutor -->
-        <section class="step active" data-step="1" aria-labelledby="step1Title">
-          <h2 id="step1Title" class="h5 mb-3">1. Dados do Tutor</h2>
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label for="tutorNome" class="form-label">Nome <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="tutorNome" name="tutorNome" required placeholder="Ex: Maria Silva" />
-              <div class="invalid-feedback">Obrigatório.</div>
-            </div>
-            <div class="col-md-4">
-              <label for="tutorTelefone" class="form-label">Telefone (WhatsApp) <span class="text-danger">*</span></label>
-              <input type="tel" class="form-control" id="tutorTelefone" name="tutorTelefone" required pattern="[0-9()+\- ]{8,}" placeholder="DDD + número" />
-              <div class="invalid-feedback">Informe um telefone válido.</div>
-            </div>
-            <div class="col-md-4">
-              <label for="tutorEmail" class="form-label">E-mail</label>
-              <input type="email" class="form-control" id="tutorEmail" name="tutorEmail" placeholder="email@exemplo.com" />
-              <div class="invalid-feedback">E-mail inválido.</div>
-            </div>
-            <div class="col-12">
-              <label for="tutorObs" class="form-label">Observações gerais</label>
-              <textarea id="tutorObs" name="tutorObs" rows="2" class="form-control" placeholder="Preferências, orientações..."></textarea>
-            </div>
-          </div>
-        </section>
+    </div>`;
+  }
 
-        <!-- STEP 2 Pets -->
-        <section class="step" data-step="2" aria-labelledby="step2Title">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h2 id="step2Title" class="h5 mb-0">2. Pets</h2>
-            <button id="btnAddPet" class="btn btn-primary btn-sm" type="button">➕ Adicionar Pet</button>
-          </div>
-          <p class="text-muted small mb-3">Cadastre todos os cães que participarão do(s) serviço(s). Sem fotos no MVP.</p>
-          <div id="petsContainer" class="row g-4"></div>
-        </section>
+  /* ------------------ UTIL ------------------ */
+  function escapeHTML(str){ return (str||'').replace(/[&<>'"]/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[c])); }
+  function showToast(msg,type='info',timeout=3500){
+    const stack = el('toastStack');
+    const div = document.createElement('div');
+    div.className='toast';
+    div.innerHTML = `<span>${escapeHTML(msg)}</span>`;
+    stack.appendChild(div);
+    setTimeout(()=>{ div.style.opacity='0'; setTimeout(()=>div.remove(),400); }, timeout);
+  }
 
-        <!-- STEP 3 Serviços -->
-        <section class="step" data-step="3" aria-labelledby="step3Title">
-          <h2 id="step3Title" class="h5 mb-3">3. Serviços & Estadia</h2>
-          <div class="row g-3 mb-2">
-            <div class="col-md-4">
-              <label for="tipoAtendimento" class="form-label">Tipo de Atendimento <span class="text-danger">*</span></label>
-              <select id="tipoAtendimento" name="tipoAtendimento" class="form-select" required>
-                <option value="" disabled selected>Selecione...</option>
-                <option value="hotel">Hotel</option>
-                <option value="creche">Creche (Daycare)</option>
-                <option value="avulso">Banho/Tosa Avulso</option>
-              </select>
-              <div class="invalid-feedback">Obrigatório.</div>
-            </div>
-            <div class="col-md-4">
-              <label for="pagamento" class="form-label">Forma Pagamento Preferida <span class="text-danger">*</span></label>
-              <select id="pagamento" name="pagamento" class="form-select" required>
-                <option value="" disabled selected>Selecione...</option>
-                <option>PIX</option>
-                <option>Cartão</option>
-                <option>Dinheiro</option>
-              </select>
-              <div class="invalid-feedback">Informe a forma.</div>
-            </div>
-            <div class="col-md-4">
-              <label for="frequenciaBanho" class="form-label">Banho durante estadia</label>
-              <select id="frequenciaBanho" class="form-select" disabled>
-                <option value="nao">Sem banho automático</option>
-                <option value="checkout">Somente no check-out</option>
-                <option value="1xsemana">1x por semana</option>
-                <option value="2xsemana">2x por semana</option>
-              </select>
-            </div>
-          </div>
-          <div id="estadiaGroup" class="row g-3 d-none mt-1">
-            <div class="col-md-3">
-              <label for="dataEntrada" class="form-label">Data Entrada <span class="text-danger">*</span></label>
-              <input type="date" id="dataEntrada" class="form-control" />
-            </div>
-            <div class="col-md-3">
-              <label for="horaEntrada" class="form-label">Hora Entrada <span class="text-danger">*</span></label>
-              <input type="time" id="horaEntrada" class="form-control" min="09:00" max="20:00" />
-            </div>
-            <div class="col-md-3">
-              <label for="dataSaida" class="form-label">Data Saída <span class="text-danger">*</span></label>
-              <input type="date" id="dataSaida" class="form-control" />
-            </div>
-            <div class="col-md-3">
-              <label for="horaSaida" class="form-label">Hora Saída <span class="text-danger">*</span></label>
-              <input type="time" id="horaSaida" class="form-control" min="09:00" max="20:00" />
-            </div>
-            <div class="col-12 small text-muted">Check-in e check-out somente de <strong>Segunda a Sexta até 18:00</strong>. Funcionamento geral: 09:00–20:00.</div>
-          </div>
-          <div id="avulsoGroup" class="row g-3 d-none mt-1">
-            <div class="col-md-4">
-              <label for="dataAvulso" class="form-label">Data Serviço <span class="text-danger">*</span></label>
-              <input type="date" id="dataAvulso" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label for="horaAvulso" class="form-label">Hora <span class="text-danger">*</span></label>
-              <input type="time" id="horaAvulso" class="form-control" min="09:00" max="20:00" />
-            </div>
-            <div class="col-md-4">
-              <label for="tipoAvulso" class="form-label">Serviço Avulso <span class="text-danger">*</span></label>
-              <select id="tipoAvulso" class="form-select">
-                <option value="" disabled selected>Selecione...</option>
-                <option value="banho">Banho</option>
-                <option value="tosa">Tosa</option>
-                <option value="banho_tosa">Banho + Tosa</option>
-                <option value="outro">Outro</option>
-              </select>
-            </div>
-          </div>
-          <hr class="my-4" />
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label for="tosa" class="form-label">Tosa</label>
-              <select id="tosa" class="form-select" disabled>
-                <option value="nao">Sem tosa</option>
-                <option value="higienica">Higiênica</option>
-                <option value="padrao">Padrão</option>
-                <option value="tesoura">Tesoura</option>
-                <option value="tosquia">Tosquia</option>
-                <option value="breed">Específica da raça</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label for="medicacao" class="form-label">Medicação?</label>
-              <select id="medicacao" class="form-select">
-                <option value="nao">Não</option>
-                <option value="sim">Sim (detalhar)</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label for="alimentacaoEspecial" class="form-label">Alimentação Especial?</label>
-              <select id="alimentacaoEspecial" class="form-select">
-                <option value="nao">Não</option>
-                <option value="sim">Sim (detalhar)</option>
-              </select>
-            </div>
-            <div class="col-12 d-none" id="medicacaoDetalhesWrapper">
-              <label for="medicacaoDetalhes" class="form-label">Detalhes Medicação</label>
-              <textarea id="medicacaoDetalhes" rows="2" class="form-control" placeholder="Nome, dosagem, horários..."></textarea>
-            </div>
-            <div class="col-12 d-none" id="alimentacaoDetalhesWrapper">
-              <label for="alimentacaoDetalhes" class="form-label">Detalhes Alimentação</label>
-              <textarea id="alimentacaoDetalhes" rows="2" class="form-control" placeholder="Ração, quantidade, frequência..."></textarea>
-            </div>
-            <div class="col-12">
-              <label for="cuidadosExtras" class="form-label">Cuidados Extras / Observações</label>
-              <textarea id="cuidadosExtras" rows="2" class="form-control" placeholder="Ansioso à noite, prefere brinquedo..."></textarea>
-            </div>
-          </div>
-        </section>
+  function computeReservationId(){
+    if(!state.data.meta.id){
+      reservationCounter += 1; localStorage.setItem('sp_res_seq', String(reservationCounter));
+      const today = new Date();
+      const ymd = today.toISOString().slice(0,10).replace(/-/g,'');
+      const seq = String(reservationCounter).padStart(3,'0');
+      state.data.meta.id = `SP-${ymd}-${seq}`;
+    }
+    reservationIdEl.textContent = state.data.meta.id;
+    el('printReservationId').textContent = state.data.meta.id;
+  }
 
-        <!-- STEP 4 Termos & Resumo -->
-        <section class="step" data-step="4" aria-labelledby="step4Title">
-          <h2 id="step4Title" class="h5 mb-3">4. Termos & Geração da Mensagem</h2>
-          <div class="alert alert-info small">
-            Política de cancelamento: aviso com 7 dias de antecedência sem cobrança (demais condições serão alinhadas no WhatsApp). Dados usados apenas para contato e prestação do serviço (LGPD).
-          </div>
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="aceiteTermos" required />
-            <label class="form-check-label" for="aceiteTermos">Aceito os termos e autorizo o uso dos dados conforme descrito.</label>
-            <div class="invalid-feedback">Obrigatório aceitar os termos.</div>
-          </div>
-          <div class="d-flex flex-wrap gap-2 mb-3">
-            <button type="button" id="btnGerar" class="btn btn-primary">💬 Gerar Mensagem WhatsApp</button>
-            <button type="button" id="btnCopy" class="btn btn-outline-secondary" disabled>📋 Copiar</button>
-            <a id="btnWhatsApp" class="btn btn-outline-success disabled" target="_blank" rel="noopener">Abrir WhatsApp</a>
-          </div>
-          <div class="mb-3">
-            <label for="mensagemFinal" class="form-label">Mensagem Gerada</label>
-            <textarea id="mensagemFinal" rows="10" class="form-control font-monospace" readonly placeholder="Gere a mensagem..."></textarea>
-          </div>
-          <div id="resumo" class="small"></div>
-        </section>
+  function activeKey(){
+    const phone = state.data?.tutor?.telefone?.replace(/\D/g,'');
+    const email = (state.data?.tutor?.email||'').trim().toLowerCase();
+    if(phone) return STORAGE_PREFIX+phone;
+    if(email) return STORAGE_PREFIX+email;
+    return STORAGE_PREFIX+'anon';
+  }
 
-        <div class="d-flex justify-content-between mt-4">
-          <button type="button" id="btnPrev" class="btn btn-outline-secondary" disabled>← Voltar</button>
-          <div class="d-flex gap-2">
-            <span id="statusMsg" class="align-self-center small text-secondary"></span>
-            <button type="button" id="btnNext" class="btn btn-primary">Próximo →</button>
-          </div>
-        </div>
-      </form>
-    </main>
+  function save(){
+    activeStorageKey = activeKey();
+    try { localStorage.setItem(activeStorageKey, JSON.stringify(state.data)); } catch(e){ console.warn('save failed', e); }
+  }
+  function load(){
+    activeStorageKey = activeKey();
+    try { const raw = localStorage.getItem(activeStorageKey); if(raw){ state.data = Object.assign(state.data, JSON.parse(raw)); } } catch(e){ console.warn('load fail', e); }
+  }
 
-    <footer class="mt-auto py-4 bg-body-tertiary border-top small text-center text-muted">
-      <p class="mb-1">&copy; <span id="year"></span> Social Pet • PWA MVP (offline ready)</p>
-      <p class="mb-0">Nenhum valor é exibido aqui; finalização no WhatsApp.</p>
-    </footer>
+  /* ------------------ STEP NAVIGATION ------------------ */
+  function goToStep(index){
+    if(index<0||index>=state.steps.length) return;
+    state.currentStep = index;
+    updateVisibility();
+    updateProgress();
+    save();
+  }
+  function nextStep(){
+    if(!validateStep(state.currentStep)) return;
+    if(state.currentStep < state.steps.length-1){ goToStep(state.currentStep+1); }
+    else { // last step
+      el('btnGenerate').style.display='inline-flex';
+      showToast('Pronto para gerar o resumo');
+    }
+  }
+  function prevStep(){ if(state.currentStep>0){ goToStep(state.currentStep-1); } }
 
-    <!-- Templates -->
-    <template id="petTemplate">
-      <div class="col-12" data-pet-card>
-        <div class="card shadow-sm h-100">
-          <div class="card-header d-flex justify-content-between align-items-center py-2">
-            <span class="small fw-semibold">Pet</span>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-pet" title="Remover" aria-label="Remover pet">✖</button>
-          </div>
-          <div class="card-body small">
-            <div class="row g-2">
-              <div class="col-sm-3">
-                <label class="form-label">Nome <span class="text-danger">*</span></label>
-                <input name="nome" class="form-control form-control-sm" required />
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Porte <span class="text-danger">*</span></label>
-                <select name="porte" class="form-select form-select-sm" required>
-                  <option value="" disabled selected>...</option>
-                  <option>Mini</option><option>Pequeno</option><option>Médio</option><option>Grande</option><option>Gigante</option>
-                </select>
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Raça</label>
-                <input name="raca" class="form-control form-control-sm" placeholder="SRD..." />
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Idade (anos)</label>
-                <input type="number" name="idade" min="0" step="0.1" class="form-control form-control-sm" />
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Peso (kg)</label>
-                <input type="number" name="peso" min="0" step="0.1" class="form-control form-control-sm" />
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Sexo</label>
-                <select name="sexo" class="form-select form-select-sm">
-                  <option>Macho</option><option>Fêmea</option>
-                </select>
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Comportamento</label>
-                <select name="comportamento" class="form-select form-select-sm">
-                  <option>Sociável</option><option>Calmo</option><option>Ansioso</option><option>Medroso</option><option>Reativo</option><option>Agressivo</option>
-                </select>
-              </div>
-              <div class="col-sm-3">
-                <label class="form-label">Vacinas</label>
-                <div class="d-flex flex-wrap gap-1">
-                  <label class="form-check form-check-inline m-0 small"><input class="form-check-input" type="checkbox" name="vac_V8" />V8/V10</label>
-                  <label class="form-check form-check-inline m-0 small"><input class="form-check-input" type="checkbox" name="vac_antirrabica" />Antirrábica</label>
-                  <label class="form-check form-check-inline m-0 small"><input class="form-check-input" type="checkbox" name="vac_gripe" />Gripe</label>
-                  <label class="form-check form-check-inline m-0 small"><input class="form-check-input" type="checkbox" name="vac_giardia" />Giardia</label>
-                </div>
-              </div>
-              <div class="col-12">
-                <label class="form-label">Restrições / Alergias</label>
-                <input name="restricoes" class="form-control form-control-sm" />
-              </div>
-              <div class="col-12">
-                <label class="form-label">Observações Saúde</label>
-                <textarea name="observacoes" rows="2" class="form-control form-control-sm" placeholder="Vermifugação, comportamento, etc."></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
+  function updateVisibility(){
+    stepMeta.forEach((m,i)=>{
+      const fs = el('step_'+m.key); if(!fs) return; fs.style.display = i===state.currentStep? 'block':'none';
+      const tab = el('tab_'+m.key); if(tab){ tab.setAttribute('aria-current', i===state.currentStep? 'step':'false'); }
+    });
+    el('btnPrev').disabled = state.currentStep===0;
+    el('btnNext').style.display = state.currentStep===state.steps.length-1? 'none':'inline-flex';
+    el('btnGenerate').style.display = state.currentStep===state.steps.length-1? 'inline-flex':'none';
+  }
+  function updateProgress(){
+    const pct = ((state.currentStep)/(state.steps.length-1))*100;
+    progressBar.style.width = pct+'%';
+  }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
-    <script src="assets/js/app.js" type="module" defer></script>
-  </body>
+  /* ------------------ VALIDATION RULES ------------------ */
+  function validateStep(idx){
+    const key = state.steps[idx];
+    let ok = true; const err=[];
+    switch(key){
+      case 'consent': if(!el('consentAccepted').checked){ ok=false; err.push('É necessário aceitar os termos.'); } break;
+      case 'tutor': if(!el('tutorNome').value.trim()) { ok=false; err.push('Informe o nome do tutor.'); } if(!/\d{8,}/.test(el('tutorTelefone').value.replace(/\D/g,''))) { ok=false; err.push('Telefone inválido.'); } break;
+      case 'pets': if(state.data.pets.length===0) { ok=false; err.push('Adicione ao menos um pet.'); } state.data.pets.forEach((p,i)=>{ if(!p.nome) { ok=false; err.push('Pet #'+(i+1)+' sem nome.'); } if(!p.porte) { ok=false; err.push('Pet #'+(i+1)+' sem porte.'); } }); break;
+      case 'services': if(!el('tipoAtendimento').value){ ok=false; err.push('Selecione o tipo de atendimento.'); } if(['hotel','creche'].includes(el('tipoAtendimento').value)){ if(!el('dataEntrada').value || !el('dataSaida').value) { ok=false; err.push('Datas entrada/saída obrigatórias.'); } } break;
+      case 'health': if(!el('vacinasOk').checked){ ok=false; err.push('Confirme vacinas obrigatórias.'); } break;
+      case 'extras': if(!el('politicasAceite').checked){ ok=false; err.push('Aceite as políticas.'); } break;
+    }
+    const stateEl = el('state_'+key); if(stateEl){ stateEl.textContent = ok? 'OK':'⚠️'; }
+    if(!ok) { showToast(err[0]||'Revise campos', 'warn'); }
+    return ok;
+  }
+
+  /* ------------------ EVENT BINDINGS ------------------ */
+  function bindEvents(){
+    el('btnNext').addEventListener('click', nextStep);
+    el('btnPrev').addEventListener('click', prevStep);
+    el('btnGenerate').addEventListener('click', generateSummary);
+    el('btnSendWA').addEventListener('click', ()=>{ openWA(); });
+    el('btnPrint').addEventListener('click', ()=> { window.print(); });
+    el('btnExport').addEventListener('click', exportJSON);
+    el('btnExportCSV').addEventListener('click', exportCSV);
+    el('btnReset').addEventListener('click', resetAll);
+    el('btnEditAny').addEventListener('click', ()=>{ summarySection.classList.add('hidden'); goToStep(0); window.scrollTo({top:0,behavior:'smooth'}); });
+    el('btnCopyWA').addEventListener('click', copyWA);
+    el('btnScrollResumo').addEventListener('click', ()=>{ document.getElementById('summarySection').scrollIntoView({behavior:'smooth'}); });
+    document.getElementById('btnTheme').addEventListener('click', toggleTheme);
+
+    // Dynamic fields watchers
+    document.addEventListener('input', handleInput, true);
+    document.addEventListener('change', handleInput, true);
+  }
+
+  function handleInput(e){
+    const t = e.target;
+    if(!t) return;
+    // Consent
+    state.data.consent.accepted = el('consentAccepted').checked;
+    state.data.consent.marketing = el('consentMarketing').checked;
+    // Tutor
+    state.data.tutor.nome = el('tutorNome')?.value||'';
+    state.data.tutor.telefone = el('tutorTelefone')?.value||'';
+    state.data.tutor.email = el('tutorEmail')?.value||'';
+    state.data.tutor.endereco = el('tutorEndereco')?.value||'';
+    state.data.tutor.emergenciaNome = el('emergNome')?.value||'';
+    state.data.tutor.emergenciaTel = el('emergTel')?.value||'';
+
+    // Pets edit inline
+    if(t.closest && t.closest('.pet-item')){
+      const idx = Number(t.closest('.pet-item').dataset.petIndex);
+      const fields = t.closest('.pet-item').querySelectorAll('[data-field]');
+      fields.forEach(f=>{ state.data.pets[idx][f.getAttribute('data-field')] = f.value; });
+    }
+
+    // Services
+    state.data.services.tipoAtendimento = el('tipoAtendimento')?.value||'';
+    state.data.services.pacoteBanho = el('pacoteBanho')?.value||'nao';
+    state.data.services.dataEntrada = el('dataEntrada')?.value||'';
+    state.data.services.horaEntrada = el('horaEntrada')?.value||'';
+    state.data.services.dataSaida = el('dataSaida')?.value||'';
+    state.data.services.horaSaida = el('horaSaida')?.value||'';
+    state.data.services.banhoFrequencia = el('banhoFrequencia')?.value||'';
+    state.data.services.tosaTipo = el('tosaTipo')?.value||'nao';
+    state.data.services.avulsoData = el('avulsoData')?.value||'';
+    state.data.services.avulsoHora = el('avulsoHora')?.value||'';
+    state.data.services.avulsoTipo = el('avulsoTipo')?.value||'';
+    state.data.services.listaEspera = el('listaEspera')?.checked||false;
+
+    // Health
+    state.data.health.vacinasOk = el('vacinasOk')?.checked||false;
+    state.data.health.medicacao = el('medicacao')?.value==='sim';
+    state.data.health.medicacaoDetalhes = el('medicacaoDetalhes')?.value||'';
+    state.data.health.alimentacaoEspecial = el('alimentacaoEspecial')?.value==='sim';
+    state.data.health.alimentacaoDetalhes = el('alimentacaoDetalhes')?.value||'';
+    state.data.health.observacoesSaude = el('observacoesSaude')?.value||'';
+
+    // Extras
+    state.data.extras.cuidados = el('cuidados')?.value||'';
+    state.data.extras.cancelamento = el('cancelamento')?.value||'';
+    state.data.extras.remarcacao = el('remarcacao')?.value||'';
+    state.data.extras.anotacoesInternas = el('anotacoesInternas')?.value||'';
+    state.data.extras.politicasAceite = el('politicasAceite')?.checked||false;
+
+    // Payment
+    state.data.payment.forma = el('formaPagamento')?.value||'PIX';
+    state.data.payment.desconto = el('descontoFidelidade')?.value==='sim';
+    state.data.payment.pacoteQtd = Number(el('pacoteQtd')?.value||'0');
+
+    toggleHealthDetails();
+    save();
+  }
+
+  function toggleHealthDetails(){
+    el('wrapMedicacaoDetalhes').classList.toggle('hidden', !state.data.health.medicacao);
+    el('wrapAlimentacaoDetalhes').classList.toggle('hidden', !state.data.health.alimentacaoEspecial);
+  }
+
+  /* ------------------ PET MANAGEMENT ------------------ */
+  function addPet(p={nome:'',porte:'',raca:'',idade:'',peso:'',comportamento:'',obs:''}){
+    if(state.data.pets.length >= MAX_PETS){ showToast('Limite de pets atingido'); return; }
+    state.data.pets.push(p); renderPets(); save();
+  }
+  function duplicatePet(index){ const clone = JSON.parse(JSON.stringify(state.data.pets[index])); state.data.pets.push(clone); renderPets(); save(); }
+  function deletePet(index){ state.data.pets.splice(index,1); renderPets(); save(); }
+  function renderPets(){
+    const container = el('petsList');
+    container.innerHTML = state.data.pets.map((p,i)=>petTemplate(p,i)).join('');
+    container.querySelectorAll('.pet-item').forEach(item=>{
+      item.addEventListener('click', e=>{
+        const btn = e.target.closest('button[data-act]'); if(!btn) return;
+        const act = btn.getAttribute('data-act'); const idx = Number(item.dataset.petIndex);
+        if(act==='dup') duplicatePet(idx); else if(act==='del') deletePet(idx);
+      });
+    });
+  }
+
+  /* ------------------ PRICING ENGINE (SIMPLIFICADO) ------------------ */
+  function computePrice(){
+    const svc = state.data.services.tipoAtendimento;
+    let base = 0; if(PRICE_BASES[svc]) base += PRICE_BASES[svc];
+    // Multiplicar por quantidade de pets (assumindo mesmo porte — uso médio). Ponderação pelos portes.
+    const porteFactorAvg = state.data.pets.reduce((acc,p)=> acc + (PRICE_PORTE_MULTIPLIER[p.porte]||1),0) / Math.max(1,state.data.pets.length);
+    base = base * Math.max(1,state.data.pets.length) * porteFactorAvg;
+
+    // Banho frequência (checkout vs semanal) – peso leve
+    if(state.data.services.banhoFrequencia==='checkout') base += 40 * state.data.pets.length;
+    else if(state.data.services.banhoFrequencia==='1x') base += 65 * state.data.pets.length;
+    else if(state.data.services.banhoFrequencia==='2x') base += 110 * state.data.pets.length;
+
+    // Tosa
+    if(state.data.services.tosaTipo && state.data.services.tosaTipo!=='nao') base += 80 * state.data.pets.length;
+
+    // Pacote Banho
+    if(state.data.services.pacoteBanho==='5') base += 5 * 50 * .9; // simulação
+    if(state.data.services.pacoteBanho==='10') base += 10 * 50 * .85;
+
+    // Pacote pagamento step
+    if(state.data.payment.pacoteQtd===5) base *= (1-PRICE_PACKAGE_DISCOUNT[5]);
+    if(state.data.payment.pacoteQtd===10) base *= (1-PRICE_PACKAGE_DISCOUNT[10]);
+
+    // Desconto fidelidade
+    if(state.data.payment.desconto) base *= (1-PRICE_ANNUAL_DISCOUNT);
+
+    // Weekend surcharge (se entrada ou saída cair sábado/domingo) – aproximação
+    const weekend = d=>{ if(!d) return false; const day = new Date(d+'T12:00:00').getUTCDay(); return day===0||day===6; };
+    if(weekend(state.data.services.dataEntrada) || weekend(state.data.services.dataSaida)) base *= (1+PRICE_WEEKEND_SURCHARGE);
+
+    state.data.payment.estimativa = Math.round(base*100)/100;
+    return state.data.payment.estimativa;
+  }
+
+  function formatBRL(v){ return 'R$ '+(v||0).toFixed(2).replace('.',','); }
+
+  /* ------------------ SUMMARY GENERATION ------------------ */
+  function generateSummary(){
+    // Validate ALL steps
+    for(let i=0;i<state.steps.length;i++){ if(!validateStep(i)){ goToStep(i); return; } }
+    computeReservationId();
+    const price = computePrice();
+    buildSummaryCards();
+    buildWAMessage();
+    priceBreakdownEl.textContent = 'Base + extras calculados localmente';
+    finalPriceEl.textContent = formatBRL(price);
+    nextActionsEl.innerHTML = '<li>Enviar WhatsApp</li><li>Aguardar confirmação</li><li>Levar carteirinha de vacinação</li>';
+    summarySection.classList.remove('hidden');
+    el('btnSendWA').style.display='inline-flex';
+    el('btnPrint').style.display='inline-flex';
+    el('btnExport').style.display='inline-flex';
+    el('btnExportCSV').style.display='inline-flex';
+    waMessageEl.focus();
+    el('printDate').textContent = new Date().toLocaleString();
+    showToast('Resumo gerado. Revise antes do envio.');
+    save();
+  }
+
+  function buildSummaryCards(){
+    const d = state.data;
+    const tutorCard = `<div class="summary-card"><button class="edit-btn" data-edit="tutor">Editar</button><h3>Tutor</h3><p class="small">${escapeHTML(d.tutor.nome)}<br>${escapeHTML(d.tutor.telefone)}<br>${escapeHTML(d.tutor.email||'—')}<br>End: ${escapeHTML(d.tutor.endereco||'—')}<br>Emerg: ${escapeHTML(d.tutor.emergenciaNome||'—')} (${escapeHTML(d.tutor.emergenciaTel||'—')})</p><span class="status-badge ${d.consent.accepted? 'status-ok':'status-bad'}">${d.consent.accepted? 'Consent OK':'Sem Consent'}</span></div>`;
+    const petsCard = `<div class="summary-card"><button class="edit-btn" data-edit="pets">Editar</button><h3>Pets (${d.pets.length})</h3><div class="small" style="max-height:130px; overflow:auto;">${d.pets.map(p=>`<div><strong>${escapeHTML(p.nome)}</strong> (${escapeHTML(p.porte||'?')}) – ${escapeHTML(p.raca||'Raça?')} ${p.obs?'<br><em>'+escapeHTML(p.obs)+'</em>':''}</div>`).join('')}</div></div>`;
+    const svc = d.services;
+    const svcCard = `<div class="summary-card"><button class="edit-btn" data-edit="services">Editar</button><h3>Serviços</h3><p class="small">Tipo: ${svc.tipoAtendimento||'—'}<br>${svc.dataEntrada? 'Entrada: '+svc.dataEntrada+' '+(svc.horaEntrada||''):''}<br>${svc.dataSaida? 'Saída: '+svc.dataSaida+' '+(svc.horaSaida||''):''}<br>Banho: ${svc.banhoFrequencia}<br>Tosa: ${svc.tosaTipo}<br>Pacote Banho: ${svc.pacoteBanho}</p></div>`;
+    const health = d.health;
+    const healthCard = `<div class="summary-card"><button class="edit-btn" data-edit="health">Editar</button><h3>Saúde</h3><p class="small">Vacinas: ${health.vacinasOk? '✔ Atualizadas':'⚠️ Pendente'}<br>Medicação: ${health.medicacao? escapeHTML(health.medicacaoDetalhes||'Sim'): 'Não'}<br>Alimentação: ${health.alimentacaoEspecial? escapeHTML(health.alimentacaoDetalhes||'Especial'): 'Normal'}<br>${escapeHTML(health.observacoesSaude||'')}</p><span class="status-badge ${health.vacinasOk? 'status-ok':'status-warn'}">${health.vacinasOk? 'OK':'Verificar'}</span></div>`;
+    const extras = d.extras;
+    const extrasCard = `<div class="summary-card"><button class="edit-btn" data-edit="extras">Editar</button><h3>Extras</h3><p class="small">Cuidados: ${escapeHTML(extras.cuidados||'—')}<br>Cancelamento: ${escapeHTML(extras.cancelamento||'—')}<br>Remarcação: ${escapeHTML(extras.remarcacao||'—')}<br>Anotações: ${escapeHTML(extras.anotacoesInternas||'—')}</p><span class="status-badge ${extras.politicasAceite? 'status-ok':'status-bad'}">${extras.politicasAceite? 'Políticas OK':'Sem aceite'}</span></div>`;
+    const pay = d.payment;
+    const paymentCard = `<div class="summary-card"><button class="edit-btn" data-edit="payment">Editar</button><h3>Pagamento</h3><p class="small">Forma: ${pay.forma}<br>Desconto: ${pay.desconto? 'Sim':'Não'}<br>Pacote Qtd: ${pay.pacoteQtd}</p><strong>${formatBRL(pay.estimativa)}</strong></div>`;
+    summaryCards.innerHTML = tutorCard + petsCard + svcCard + healthCard + extrasCard + paymentCard;
+    summaryCards.querySelectorAll('[data-edit]').forEach(btn=>btn.addEventListener('click',()=>{ const sKey = btn.getAttribute('data-edit'); const idx = state.steps.indexOf(sKey); if(idx>-1){ summarySection.classList.add('hidden'); goToStep(idx); window.scrollTo({top:0,behavior:'smooth'}); } }));
+  }
+
+  function buildWAMessage(){
+    const d = state.data; const id = d.meta.id;
+    const parts = [];
+    parts.push(`ID:${id}`);
+    parts.push(`Tutor:${short(d.tutor.nome)} Tel:${digits(d.tutor.telefone)}`);
+    parts.push(`Pets:${d.pets.length}`);
+    parts.push(`Tipo:${d.services.tipoAtendimento}`);
+    if(d.services.dataEntrada) parts.push(`In:${d.services.dataEntrada}`);
+    if(d.services.dataSaida) parts.push(`Out:${d.services.dataSaida}`);
+    if(d.services.banhoFrequencia!=='nao') parts.push(`Banho:${d.services.banhoFrequencia}`);
+    if(d.services.tosaTipo!=='nao') parts.push(`Tosa:${d.services.tosaTipo}`);
+    parts.push(`Vac:${d.health.vacinasOk? 'OK':'PEND'}`);
+    parts.push(`Est:${formatBRL(d.payment.estimativa)}`);
+    const msg = parts.join(' | ');
+    waMessageEl.value = msg;
+    waLinkEl.href = `https://wa.me/${WHATSAPP_TARGET}?text=${encodeURIComponent(msg)}`;
+  }
+
+  function short(str, max=18){ str = (str||'').trim(); return str.length>max? str.slice(0,max-1)+'…':str; }
+  function digits(str){ return (str||'').replace(/\D/g,''); }
+
+  function openWA(){ window.open(waLinkEl.href,'_blank'); }
+  async function copyWA(){ try { await navigator.clipboard.writeText(waMessageEl.value); showToast('Copiado'); } catch { showToast('Falha ao copiar','warn'); } }
+
+  /* ------------------ EXPORTS ------------------ */
+  function exportJSON(){ const blob = new Blob([JSON.stringify(state.data,null,2)],{type:'application/json'}); triggerDownload(blob, state.data.meta.id+ '.json'); }
+  function exportCSV(){
+    const rows = [];
+    rows.push(['ID','Tutor','Telefone','Email','Tipo','Entrada','Saida','Pets','Preco']);
+    rows.push([
+      state.data.meta.id,
+      clean(state.data.tutor.nome),
+      digits(state.data.tutor.telefone),
+      clean(state.data.tutor.email),
+      state.data.services.tipoAtendimento,
+      state.data.services.dataEntrada,
+      state.data.services.dataSaida,
+      String(state.data.pets.length),
+      String(state.data.payment.estimativa)
+    ]);
+    const csv = rows.map(r=>r.map(v=> '"'+(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'}); triggerDownload(blob, state.data.meta.id+'.csv');
+  }
+  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+  function triggerDownload(blob, filename){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); }
+
+  /* ------------------ RESET ------------------ */
+  function resetAll(){ if(!confirm('Limpar todos os dados?')) return; localStorage.removeItem(activeStorageKey); state.data = JSON.parse(JSON.stringify({
+    consent:{ accepted:false, policyLink:'#', marketing:false },
+    tutor:{ nome:'', telefone:'', email:'', emergenciaNome:'', emergenciaTel:'', endereco:'' },
+    pets:[], services:{ tipoAtendimento:'', dataEntrada:'', horaEntrada:'', dataSaida:'', horaSaida:'', pacoteBanho:'nao', banhoFrequencia:'', tosaTipo:'nao', avulsoData:'', avulsoHora:'', avulsoTipo:'', listaEspera:false },
+    health:{ vacinasOk:false, comprovantes:[], medicacao:false, medicacaoDetalhes:'', alimentacaoEspecial:false, alimentacaoDetalhes:'', observacoesSaude:'' },
+    extras:{ cuidados:'', politicasAceite:false, cancelamento:'', remarcacao:'', anotacoesInternas:'' },
+    payment:{ forma:'PIX', estimativa:0, desconto:false, pacoteQtd:0 },
+    meta:{ createdAt: Date.now(), id:'' }
+  }));
+    renderPets(); state.currentStep=0; goToStep(0); summarySection.classList.add('hidden'); showToast('Reiniciado'); save(); }
+
+  /* ------------------ THEME ------------------ */
+  function toggleTheme(){ const dark = document.documentElement.classList.toggle('dark'); if(dark){ document.documentElement.style.background='#0f1418'; } localStorage.setItem('sp_theme', dark? 'dark':'light'); }
+  function loadTheme(){ if(localStorage.getItem('sp_theme')==='dark') document.documentElement.classList.add('dark'); }
+
+  /* ------------------ INIT ------------------ */
+  function init(){
+    buildSteps();
+    load();
+    renderPets();
+    bindEvents();
+    computeReservationId();
+    goToStep(state.currentStep||0);
+    loadTheme();
+    if(state.data.pets.length===0) addPet();
+    showToast('Autosave ativo');
+    // sanity test function
+    window.__runSanityChecks = ()=>{
+      return {
+        steps: state.steps.length,
+        pets: state.data.pets.length,
+        consent: state.data.consent.accepted,
+        hasId: !!state.data.meta.id,
+        hasWA: !!waLinkEl.href,
+        price: state.data.payment.estimativa
+      };
+    };
+    window.addEventListener('beforeunload', save);
+  }
+
+  init();
+})();
+</script>
+</body>
 </html>
