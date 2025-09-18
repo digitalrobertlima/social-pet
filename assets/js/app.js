@@ -23,6 +23,7 @@ const btnExport = document.getElementById('btnExport');
 const btnImport = document.getElementById('btnImport');
 const importFile = document.getElementById('importFile');
 const btnInstall = document.getElementById('btnInstall');
+const versionBadge = document.getElementById('appVersion');
 
 // Serviços fields
 const tipoAtendimento = document.getElementById('tipoAtendimento');
@@ -270,4 +271,6 @@ if ('serviceWorker' in navigator) {
   if (!petsContainer.children.length) addPet();
   loadState();
   updateResumo();
+  // Carrega versão dinâmica
+  fetch('./version.txt',{cache:'no-store'}).then(r=>r.text()).then(v=>{ if(versionBadge) versionBadge.textContent = 'v'+v.trim(); }).catch(()=>{});
 })();

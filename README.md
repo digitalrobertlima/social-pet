@@ -17,6 +17,7 @@ Evitar retrabalho e troca de mensagens repetitivas: o tutor preenche tudo, gera 
 | Arquivo | Descrição |
 |---------|-----------|
 | `index.html` | Form principal + lógica de geração de mensagem WhatsApp + persistência local. |
+| `version.txt` | Arquivo fonte da versão exibida como badge no app. |
 | `LICENSE` | Licença do projeto. |
 
 ## ✨ Funcionalidades Principais
@@ -99,3 +100,15 @@ Abra uma issue descrevendo sua necessidade ou sugestão.
 
 ---
 <sub>MVP gerado. Iterações bem-vindas.</sub>
+
+---
+### 🔢 Versionamento da Interface
+O badge de versão (ex: `v0.0.1`) é carregado do arquivo `version.txt` via fetch. Para atualizar:
+1. Edite `version.txt` (ex: `0.0.2`).
+2. Faça commit semântico: `chore: bump version to 0.0.2`.
+3. Após o deploy/Pages recarregar, verifique o canto superior (navbar) para confirmar.
+
+Sugestão de semântica de versão:
+- MAJOR: mudanças incompatíveis na coleta de dados.
+- MINOR: novos campos / features não disruptivos.
+- PATCH: correções de layout, ajustes de validação, refactors internos.
